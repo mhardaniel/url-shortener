@@ -6397,6 +6397,12 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
 //
 //
 //
+//
+//
+//
+//
+//
+//
 
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
@@ -6422,7 +6428,7 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
     }
   },
   methods: {
-    inputLinkPaste: function inputLinkPaste(evt) {
+    save: function save(data) {
       var _this = this;
 
       return _asyncToGenerator( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default().mark(function _callee() {
@@ -6430,28 +6436,18 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
-                _this.clientErrors = null;
-                _this.serverErrors = null;
-                _this.link = evt.clipboardData.getData("text");
+                _this.loading;
+                _context.next = 3;
+                return _this.$inertia.post("/urls", data, {
+                  onSuccess: function onSuccess() {
+                    // Handle success event
+                    _this.loading = false;
+                  },
+                  onError: function onError(errors) {// Handle validation errors
+                  }
+                });
 
-                if (_this._isValidUrl()) {
-                  _this.loading = true;
-
-                  _this.$inertia.post("/urls", {
-                    original_link: _this.link
-                  }, {
-                    onSuccess: function onSuccess() {
-                      // Handle success event
-                      _this.loading = false;
-                    },
-                    onError: function onError(errors) {// Handle validation errors
-                    }
-                  });
-                } else {
-                  _this.clientErrors = "The URL format is invalid.";
-                }
-
-              case 4:
+              case 3:
               case "end":
                 return _context.stop();
             }
@@ -6459,59 +6455,43 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
         }, _callee);
       }))();
     },
-    inputLinkChanged: function inputLinkChanged(evt) {
-      var _this2 = this;
+    inputLinkPaste: function inputLinkPaste(evt) {
+      this._reset();
 
-      return _asyncToGenerator( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default().mark(function _callee2() {
-        return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default().wrap(function _callee2$(_context2) {
-          while (1) {
-            switch (_context2.prev = _context2.next) {
-              case 0:
-                _this2.clientErrors = null;
-                _this2.serverErrors = null;
+      this.link = evt.clipboardData.getData("text");
 
-                if (_this2._isValidUrl()) {
-                  _this2.loading = true;
-
-                  _this2.$inertia.post("/urls", _this2.form).then(function () {
-                    _this2.loading = false;
-                  }); // try {
-                  //   const response = await axios.post("/urls", this.form);
-                  //   this.responseData = response.data.url;
-                  // } catch (error) {
-                  //   if (error.response) {
-                  //     console.log(error.response.data.errors);
-                  //     this.serverErrors = error.response.data.errors;
-                  //   }
-                  // } finally {
-                  //   this.loading = false;
-                  // }
-
-                } else {
-                  _this2.clientErrors = "The URL format is invalid.";
-                } //   setTimeout(() => {
-                //     this.loading = false;
-                //   }, 5000);
-
-
-              case 3:
-              case "end":
-                return _context2.stop();
-            }
-          }
-        }, _callee2);
-      }))();
+      if (this._isValidUrl(this.link)) {
+        var data = {
+          original_link: this.link
+        };
+        this.save(data);
+      } else {
+        this.clientErrors = "The URL format is invalid.";
+      }
     },
-    _isValidUrl: function _isValidUrl() {
-      if (!this.link) return false;
-      var res = this.link.match(/(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g);
+    inputLinkChanged: function inputLinkChanged() {
+      this._reset();
+
+      if (this._isValidUrl(this.form.original_link)) {
+        this.save(this.form);
+      } else {
+        this.clientErrors = "The URL format is invalid.";
+      }
+    },
+    _reset: function _reset() {
+      this.clientErrors = null;
+      this.serverErrors = null;
+    },
+    _isValidUrl: function _isValidUrl(link) {
+      if (!link) return false;
+      var res = link.match(/(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g);
       return res !== null;
     },
     loadUrls: function loadUrls() {
-      var _this3 = this;
+      var _this2 = this;
 
       axios__WEBPACK_IMPORTED_MODULE_2___default().get("urls").then(function (data) {
-        return _this3.data = data.data;
+        return _this2.data = data.data;
       });
     },
     deleteUrl: function deleteUrl(id) {
@@ -56958,6 +56938,14 @@ var render = function() {
           _c("h1", { staticClass: "font-bold text-4xl text-center" }, [
             _vm._v("URL Shortener")
           ]),
+          _vm._v(" "),
+          _vm.$page.props.flash.error
+            ? _c("div", { staticClass: "bg-red-100 text-red-500 p-1 my-4" }, [
+                _vm._v(
+                  "\n      " + _vm._s(_vm.$page.props.flash.error) + "\n    "
+                )
+              ])
+            : _vm._e(),
           _vm._v(" "),
           _vm.$page.props.flash.success
             ? _c(

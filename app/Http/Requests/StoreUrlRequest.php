@@ -34,6 +34,7 @@ class StoreUrlRequest extends FormRequest
     {
     return [
         'original_link.url' => 'Invalid URL',
+        'original_link.required' => 'Invalid URL',
     ];
     }
 }

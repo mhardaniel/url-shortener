@@ -5,6 +5,12 @@
     >
       <h1 class="font-bold text-4xl text-center">URL Shortener</h1>
       <div
+        v-if="$page.props.flash.error"
+        class="bg-red-100 text-red-500 p-1 my-4"
+      >
+        {{ $page.props.flash.error }}
+      </div>
+      <div
         v-if="$page.props.flash.success"
         class="bg-green-100 text-green-500 p-1 my-4"
       >
@@ -125,63 +131,46 @@ export default {
     },
   },
   methods: {
-    async inputLinkPaste(evt) {
-      this.clientErrors = null;
-      this.serverErrors = null;
+    async save(data) {
+      this.loading;
+      await this.$inertia.post("/urls", data, {
+        onSuccess: () => {
+          // Handle success event
+          this.loading = false;
+        },
+        onError: (errors) => {
+          // Handle validation errors
+        },
+      });
+    },
+    inputLinkPaste(evt) {
+      this._reset();
 
       this.link = evt.clipboardData.getData("text");
 
-      if (this._isValidUrl()) {
-        this.loading = true;
-        this.$inertia.post(
-          "/urls",
-          { original_link: this.link },
-          {
-            onSuccess: () => {
-              // Handle success event
-              this.loading = false;
-            },
-            onError: (errors) => {
-              // Handle validation errors
-            },
-          }
-        );
+      if (this._isValidUrl(this.link)) {
+        let data = { original_link: this.link };
+        this.save(data);
       } else {
         this.clientErrors = "The URL format is invalid.";
       }
     },
-    async inputLinkChanged(evt) {
+    inputLinkChanged() {
+      this._reset();
+      if (this._isValidUrl(this.form.original_link)) {
+        this.save(this.form);
+      } else {
+        this.clientErrors = "The URL format is invalid.";
+      }
+    },
+    _reset() {
       this.clientErrors = null;
       this.serverErrors = null;
-
-      if (this._isValidUrl()) {
-        this.loading = true;
-        this.$inertia.post("/urls", this.form).then(() => {
-          this.loading = false;
-        });
-        // try {
-        //   const response = await axios.post("/urls", this.form);
-        //   this.responseData = response.data.url;
-        // } catch (error) {
-        //   if (error.response) {
-        //     console.log(error.response.data.errors);
-        //     this.serverErrors = error.response.data.errors;
-        //   }
-        // } finally {
-        //   this.loading = false;
-        // }
-      } else {
-        this.clientErrors = "The URL format is invalid.";
-      }
-      //   setTimeout(() => {
-      //     this.loading = false;
-      //   }, 5000);
     },
+    _isValidUrl(link) {
+      if (!link) return false;
 
-    _isValidUrl() {
-      if (!this.link) return false;
-
-      let res = this.link.match(
+      let res = link.match(
         /(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g
       );
 
